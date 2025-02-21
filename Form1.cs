@@ -124,6 +124,8 @@ public partial class Form1 : Form
 
 	private void Form1_SizeChanged(object sender, EventArgs e)
 	{
+		if (swapChain == null)
+			return;
 		device?.ImmediateContext.ClearState();
 		renderTarget?.Dispose();
 		backBuffer?.Dispose();
