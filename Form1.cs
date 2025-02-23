@@ -39,6 +39,7 @@ public partial class Form1 : Form
 
 	private void Form1_Load(object sender, EventArgs e)
 	{
+#if !USE_HWND_RENDER_TARGET
 		// SwapChain description
 		var desc = new SwapChainDescription()
 		{
@@ -68,7 +69,20 @@ public partial class Form1 : Form
 		surface = backBuffer.QueryInterface<Surface>();
 		renderTarget = new RenderTarget(d2dFactory, surface,
 			new RenderTargetProperties(new PixelFormat(Format.Unknown, D2D.AlphaMode.Premultiplied)));
-
+#else
+		var hwnd_prop = new HwndRenderTargetProperties
+		{
+			Hwnd = Handle,
+			PixelSize = new Size2(ClientSize.Width, ClientSize.Height)
+		};
+		d2dFactory = new D2D.Factory();
+		var render_prop = new RenderTargetProperties
+		{
+			DpiX = 96,
+			DpiY = 96,
+		};
+		renderTarget = new D2D.WindowRenderTarget(d2dFactory, render_prop, hwnd_prop);
+#endif
 		whiteBrush = new SolidColorBrush(renderTarget, new Color4(1, 1, 1, 1));
 		greenBrush = new SolidColorBrush(renderTarget, new Color4(0, 0.75f, 0, 1));
 
@@ -85,8 +99,10 @@ public partial class Form1 : Form
 		renderTarget?.Dispose();
 		dwriteFactory?.Dispose();
 		d2dFactory?.Dispose();
+#if !USE_HWND_RENDER_TARGET
 		swapChain?.Dispose();
 		device?.Dispose();
+#endif
 	}
 
 	private void Form1_Shown(object sender, EventArgs e)
@@ -124,6 +140,7 @@ public partial class Form1 : Form
 
 	private void Form1_SizeChanged(object sender, EventArgs e)
 	{
+#if !USE_HWND_RENDER_TARGET
 		if (swapChain == null)
 			return;
 		device?.ImmediateContext.ClearState();
@@ -137,6 +154,9 @@ public partial class Form1 : Form
 		surface = backBuffer.QueryInterface<Surface>();
 		renderTarget = new RenderTarget(d2dFactory, surface,
 			new RenderTargetProperties(new PixelFormat(Format.Unknown, D2D.AlphaMode.Premultiplied)));
+#else
+		renderTarget?.Resize(new Size2(ClientSize.Width, ClientSize.Height));
+#endif
 	}
 
 	private void Form1_KeyPress(object sender, KeyPressEventArgs e)
@@ -177,10 +197,16 @@ public partial class Form1 : Form
 		renderTarget!.BeginDraw();
 		RenderScene(ref renderTarget!);
 		renderTarget.EndDraw();
+#if !USE_HWND_RENDER_TARGET
 		swapChain!.Present(0, PresentFlags.None);
+#endif
 	}
 
+#if !USE_HWND_RENDER_TARGET
 	private void RenderScene(ref D2D.RenderTarget target)
+#else
+	private void RenderScene(ref D2D.WindowRenderTarget target)
+#endif
 	{
 		if (frameBitmap != null) {
 			target.DrawBitmap(frameBitmap,
@@ -275,14 +301,18 @@ public partial class Form1 : Form
 		}
 	}
 
-	private static DXDevice? device;
 	private static D2D.Factory? d2dFactory;
 	private static DWrite.Factory? dwriteFactory;
+#if !USE_HWND_RENDER_TARGET
+	private static DXDevice? device;
 	private SwapChain? swapChain;
 	private Texture2D? backBuffer;
 	private Surface? surface;
 	private RenderTargetView? renderView;
 	private RenderTarget? renderTarget;
+#else
+	private WindowRenderTarget? renderTarget;
+#endif
 
 	private VideoCapture? videoCapture;
 	private Mat? frame;
@@ -307,7 +337,9 @@ public partial class Form1 : Form
 						renderTarget!.BeginDraw();
 						RenderScene(ref renderTarget!);
 						renderTarget.EndDraw();
+#if !USE_HWND_RENDER_TARGET
 						swapChain!.Present(0, PresentFlags.None);
+#endif
 					} else {
 						using var g = CreateGraphics();
 						g.Clear(System.Drawing.Color.Black);
