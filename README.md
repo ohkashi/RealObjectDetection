@@ -3,12 +3,12 @@ Use [YOLO11](https://github.com/ultralytics/ultralytics) in real-time for object
 
 ![shot1](https://github.com/ohkashi/RealObjectDetection/blob/master/shot1.jpg)
 
-# Dependencies
+## Dependencies
 * [YoloSharp](https://github.com/dme-compunet/YoloSharp)
 * [OpenCvSharp4](https://github.com/shimat/opencvsharp)
 * [SharpDX](https://github.com/sharpdx/SharpDX)
 
-# License
+## License
 
 AGPL-3.0 License
 
